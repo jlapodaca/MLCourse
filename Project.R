@@ -99,11 +99,11 @@ predict(modFitPCA, newdata= testingsPCA[,-indexwoNA])
 
 confusionMatrix(testingsPCA$classe,predict(modFitPCA, newdata= testingsPCA[,-indexwoNA]))
 
-## We will stick to training with 55 variable, no scaling, centering or PCA.
-## Lets see if a method such as Random Forests improves accuracy
+## We will stick to training with 55 variable, no scaling, or centering.
+## Lets see if a method such as RF with PCA improves accuracy
 trainingRF<-training[foldstrain[[5]],]
 testingRF<-training[-foldstrain[[5]],]
-modFitRF<-train(classe ~ ., method='rf', data=trainingRF[,-indexwoNA])
+modFitRF<-train(classe ~ ., method='rf', data=trainingRF[,-indexwoNA],preProcess='pca')
 print(modFitRF)
 predict(modFitRF, newdata= testingRF[,-indexwoNA])
 
@@ -112,8 +112,21 @@ confusionMatrix(testingRF$classe,predict(modFitRF, newdata= testingRF[,-indexwoN
 
 
 ##Finally, the predictions for the 20 cases to test are as follows
-predictions<-predict(modFitRF, newdata= testing[,-indexwoNA])
-confusionMatrix(testing$classe,predict(modFitRF, newdata= testing[,-indexwoNA]))
+finalnames<-names(training[,-indexwoNA])
+finalnames<-finalnames[1:(length(finalnames)-1)]
+predictions<-predict(modFitnoNA, newdata= testing[,finalnames])
+
+
+
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(predictions)
 
 
 # Obtain average out of sample error with repeated cross validation (estimation of error)
